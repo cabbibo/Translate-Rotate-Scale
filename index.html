@@ -21,12 +21,12 @@
     <script src="lib/three.js"></script>
     <script src="lib/OBJLoader.js"></script>
     <script src="lib/TrackballControls.js"></script>
-    <script src="lib/ConnectedHand.js"></script>
+    <script src="lib/RiggedSkeleton.js"></script>
     <script src="lib/ObjectControls.js"></script>
     
     <script>
 
-      var container , camera , scener, renderer , stats;
+      var container , camera , scene, renderer , stats;
 
       var controller , controls;
 
@@ -34,11 +34,16 @@
       var objectControls;
       var OBJLoader = new THREE.OBJLoader();
 
-         init();
+      var helixGeo ;
+
+      var riggedSkeleton;
+
+
 
       OBJLoader.load( 'lib/lordHelix.obj' , function(object){
-         
-
+        
+        init();
+          
         object.traverse( function ( child ) {
 
           if ( child instanceof THREE.Mesh ) {
@@ -46,6 +51,7 @@
             child.geometry.computeBoundingSphere();
             child.geometry.computeBoundingBox();
 
+            helixGeo = child.geometry;
 
             var white = new THREE.Color( 1 , 1 , 1 );
 
@@ -114,6 +120,8 @@
 
         });
 
+        initHand();
+
         animate();
 
       });
@@ -144,14 +152,7 @@
         renderer.setSize( window.innerWidth, window.innerHeight );
         container.appendChild( renderer.domElement );    
 
-        var mesh = new THREE.Mesh( geometry , material );
-        scene.add( mesh );
-
-        objectControls = new ObjectControls( camera , controller );
-        objectControls.linkToCenter( mesh );
-
-
-        for( var i = 0; i < 10; i++ ){
+        for( var i = 0; i < 6; i++ ){
 
           var color = new THREE.Color();
           color.r = Math.random();
@@ -165,11 +166,61 @@
           scene.add( light );
 
         }
+        
+        //objectControls.linkToCenter( riggedSkeleton.hand );
+
+        
+        objectControls = new ObjectControls( camera , controller );
+
+
+        var mesh = new THREE.Mesh(
+          new THREE.IcosahedronGeometry( .1 , 0 ),
+          new THREE.MeshNormalMaterial()
+        );
+
+        scene.add( mesh );
+
+        objectControls.linkToCenter( mesh );
+
+
 
         controller.connect();
 
         window.addEventListener( 'resize', onResize , false );
         
+
+      }
+
+
+      function initHand(){
+
+
+        riggedSkeleton = new RiggedSkeleton( controller , {
+
+            handSize: 100,
+            movementSize: 100,
+
+        });
+
+
+
+        var obj = new THREE.Mesh(
+            helixGeo,
+            new THREE.MeshNormalMaterial()
+        );
+
+        obj.scale.multiplyScalar( .001 );
+        
+
+        riggedSkeleton.addScaledFingerMesh( obj , 'thumb' );
+        riggedSkeleton.addScaledFingerMesh( obj , 'index' );
+        riggedSkeleton.addScaledFingerMesh( obj , 'middle'  );
+        riggedSkeleton.addScaledFingerMesh( obj , 'ring' );
+        riggedSkeleton.addScaledFingerMesh( obj , 'pinky'  );
+
+        riggedSkeleton.addToScene( scene );
+
+        console.log( riggedSkeleton );
 
       }
       
@@ -182,6 +233,8 @@
 
       function animate(){
 
+        //console.log( riggedSkeleton.hand.position );
+        riggedSkeleton.update();
         objectControls.update();
         controls.update();
         renderer.render( scene , camera );
