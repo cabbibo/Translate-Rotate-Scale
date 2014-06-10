@@ -36,8 +36,7 @@
 
       var helixGeo ;
 
-      var riggedSkeleton;
-
+      var riggedSkeleton , riggedSkeleton1;
 
 
       OBJLoader.load( 'lib/lordHelix.obj' , function(object){
@@ -50,6 +49,9 @@
 
             child.geometry.computeBoundingSphere();
             child.geometry.computeBoundingBox();
+
+            child.geometry.computeVertexNormals();
+            child.geometry.computeFaceNormals();
 
             helixGeo = child.geometry;
 
@@ -89,7 +91,7 @@
 
               var color     = new THREE.Color( i / numOfObjects , 0 , 1 );
               var specular  = new THREE.Color( 1 , 0 , i / numOfObjects );
-              var newMat    = new THREE.MeshPhongMaterial({
+              var newMat    = new THREE.MeshLambertMaterial({
                 color:color,
                 specular: specular  
               });
@@ -119,11 +121,6 @@
 
 
         });
-
-        initHand();
-
-        animate();
-
       });
 
       function init(){
@@ -159,29 +156,38 @@
           color.g = Math.random();
           color.b = Math.random();
 
-          var light = new THREE.PointLight( color , 1 , 100 );
-          light.position.x = ( Math.random() - .5 ) * 100;
-          light.position.y = ( Math.random() - .5 ) * 100;
-          light.position.z = ( Math.random() - .5 ) * 100;
+          var light = new THREE.DirectionalLight( color , 1 );
+          light.position.x = ( i < 2 ?  i - .5 : 0);
+          light.position.y = ( i < 4 && i > 2 ? ( i - 2 ) - .5 : 0 );
+          light.position.z = ( i < 6 && i > 4 ? ( i - 4 ) - .5 : 0 );
           scene.add( light );
 
         }
         
-        //objectControls.linkToCenter( riggedSkeleton.hand );
 
+        riggedSkeleton = initHand();
+        riggedSkeleton1 = initHand();
         
-        objectControls = new ObjectControls( camera , controller );
-
-
         var mesh = new THREE.Mesh(
-          new THREE.IcosahedronGeometry( .1 , 0 ),
-          new THREE.MeshNormalMaterial()
+          new THREE.IcosahedronGeometry( 3 , 0 ),
+          new THREE.MeshLambertMaterial()
         );
 
-        scene.add( mesh );
+        objectControls = new ObjectControls( 
+          camera , 
+          riggedSkeleton.hand , 
+          riggedSkeleton1.hand , 
+          controller , 
+          {
+            indicator : mesh     
+          }
+        );
+       
+        objectControls.addIndicator();
+        //scene.add( mesh );
 
-        objectControls.linkToCenter( mesh );
 
+        animate();
 
 
         controller.connect();
@@ -195,9 +201,9 @@
       function initHand(){
 
 
-        riggedSkeleton = new RiggedSkeleton( controller , {
+        var riggedSkeleton = new RiggedSkeleton( controller , {
 
-            handSize: 100,
+            handSize: 10,
             movementSize: 100,
 
         });
@@ -205,7 +211,7 @@
 
 
         var obj = new THREE.Mesh(
-            helixGeo,
+            new THREE.BoxGeometry( 10 , 10 , 100 ),//helixGeo,
             new THREE.MeshNormalMaterial()
         );
 
@@ -222,6 +228,8 @@
 
         console.log( riggedSkeleton );
 
+        return riggedSkeleton;
+
       }
       
       function onResize() {
@@ -234,7 +242,8 @@
       function animate(){
 
         //console.log( riggedSkeleton.hand.position );
-        riggedSkeleton.update();
+        riggedSkeleton.update( 0 );
+        riggedSkeleton1.update( 1 );
         objectControls.update();
         controls.update();
         renderer.render( scene , camera );

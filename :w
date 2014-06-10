@@ -169,20 +169,6 @@
     this.oFrame = this.frame;
     this.frame = this.controller.frame();
 
-    if( this.frame.hands[1] && this.oFrame.hands[1] ){
-
-      if( this.selected ){
-
-        this.checkForRotation( this.frame.hands[1] , this.oFrame.hands[1] );
-
-      }
-
-    }else{
-
-      this.rotating = false;
-
-    }
-
     if( this.frame.hands[0] && this.oFrame.hands[0] ){
 
       //console.log( this.centerPoint );
@@ -212,8 +198,19 @@
     }
 
 
+    if( this.frame.hands[1] && this.oFrame.hands[1] ){
 
+      if( this.selected ){
 
+        this.checkForRotation( this.frame.hands[1] , this.oFrame.hands[1] );
+
+      }
+
+    }else{
+
+      this.rotating = false;
+
+    }
 
   };
 
@@ -253,30 +250,20 @@
     var v1  = new THREE.Vector3().fromArray( v1 );
     var v2  = new THREE.Vector3().fromArray( v2 );
 
-    var d1 = v1.sub( o );d1.normalize();
-    var d2 = v2.sub( o );d2.normalize();
+    var d1 = v1.sub( o ).normalize();
+    var d2 = v2.sub( o ).normalize();
 
     var angle = d1.angleTo( d2 );
 
 
     var axis  = d1.cross( d2 );
-    axis.normalize();
-
-    console.log( axis );
 
     var quat = new THREE.Quaternion();
+
     quat.setFromAxisAngle( axis , angle );
 
-    var toRotate = new THREE.Quaternion().setFromEuler( this.selected.rotation );
-
-    quat.multiply( toRotate.clone() );
-
-    toRotate.multiply( quat );
-
-   // console.log( this.selected.rotation );
-    this.selected.rotation.setFromQuaternion( toRotate );
-
-    //this.selected.
+    this.object.
+    console.log( o );
 
   }
   
