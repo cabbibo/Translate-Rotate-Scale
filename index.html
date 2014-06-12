@@ -59,15 +59,18 @@ console.log( THREE );
       var shaders = new ShaderLoader('shaders');
 
       shaders.shaderSetLoaded = function(){
-       /* init();
+        init();
         animate();
-        stream.play();*/
+        //stream.play();*/
       }
 
       shaders.load( 'vs-iri' , 'iri' , 'vertex' );
       shaders.load( 'fs-iri' , 'iri' , 'fragment' );
       shaders.load( 'vs-jelly' , 'jelly' , 'vertex' );
       shaders.load( 'fs-jelly' , 'jelly' , 'fragment' );
+      shaders.load( 'vs-column' , 'column' , 'vertex' );
+      shaders.load( 'fs-column' , 'column' , 'fragment' );
+      shaders.load( 'sim-column' , 'column' , 'simulation' );
 
       shaders.load( 'jellySim'  , 'jellySim' , 'simulation'  );
 
@@ -85,93 +88,6 @@ console.log( THREE );
       //var userAudio = new UserAudio( audioController );
       
       //userAudio.onStreamCreated = function(){
-
-        OBJLoader.load( 'lib/lordHelix.obj' , function(object){
-          init();
-           
-          object.traverse( function ( child ) {
-
-            if ( child instanceof THREE.Mesh ) {
-
-              child.geometry.computeBoundingSphere();
-              child.geometry.computeBoundingBox();
-
-              child.geometry.computeVertexNormals();
-              child.geometry.computeFaceNormals();
-
-              helixGeo = child.geometry;
-
-              var white = new THREE.Color( 1 , 1 , 1 );
-
-              var hoverOver = function(){
-
-                console.log( 'hoverOver' );
-                this.material.opacity = 1;
-                this.material.color = white;
-                this.material.transparent = true;
-
-              }
-
-              var hoverOut = function(){
-
-                console.log( 'hoverOut' );
-                console.log( this.uuid );
-                this.material.opacity = .3;
-                this.material.transparent = true;
-
-              }
-
-              var select = function(){
-
-                this.material.wireframe = true;
-
-              }
-
-              var deselect = function(){
-
-                this.material.wireframe = false;
-
-              }
-
-              for( var i = 0; i < numOfObjects ; i ++ ){
-
-                var color     = new THREE.Color( i / numOfObjects , 0 , 1 );
-                var specular  = new THREE.Color( 1 , 0 , i / numOfObjects );
-                var newMat    = new THREE.MeshLambertMaterial({
-                  color:color,
-                  specular: specular  
-                });
-
-                var mesh = new THREE.Mesh( child.geometry , newMat );
-                scene.add( mesh );
-
-                mesh.scale.multiplyScalar( 2 );
-                mesh.rotation.x = Math.PI / 2;
-
-                var size = Math.ceil( Math.sqrt( numOfObjects ) );
-                var x = Math.floor( i / size );
-                var y = (i - (x * size ) ) / size;
-                mesh.position.y = ( y - .5 ) * 100;
-                mesh.position.x = ( x/size - .5 ) * 100;
-
-                mesh.hoverOut = hoverOut;
-                mesh.hoverOver = hoverOver;
-                mesh.select = select;
-                mesh.deselect = deselect;
-
-                objectControls.add( mesh );
-
-                
-                //cloth = new Cloth( mesh.position );
-
-              }
-
-              animate();
-
-            }
-          });
-        });
-
      // }
 
       function init(){
@@ -235,9 +151,81 @@ console.log( THREE );
           }
         );
        
-        objectControls.addIndicator();
+        //objectControls.addIndicator();
         //scene.add( mesh );
 
+
+              var white = new THREE.Color( 1 , 1 , 1 );
+
+              var hoverOver = function(){
+
+                console.log( 'hoverOver' );
+                this.material.opacity = 1;
+                this.material.color = white;
+                this.material.transparent = true;
+
+              }
+
+              var hoverOut = function(){
+
+                console.log( 'hoverOut' );
+                console.log( this.uuid );
+                this.material.opacity = .3;
+                this.material.transparent = true;
+
+              }
+
+              var select = function(){
+
+                this.material.wireframe = true;
+
+              }
+
+              var deselect = function(){
+
+                this.material.wireframe = false;
+
+              }
+
+              for( var i = 0; i < 1 ; i ++ ){
+
+                var color     = new THREE.Color( i / numOfObjects , 0 , 1 );
+                var specular  = new THREE.Color( 1 , 0 , i / numOfObjects );
+                var newMat    = new THREE.MeshLambertMaterial({
+                  color:color,
+                  specular: specular  
+                });
+
+                var geo = new THREE.IcosahedronGeometry( 4 , 1 );
+                //var geo = child.geometry;
+                var mesh = new THREE.Mesh( geo , newMat );
+                scene.add( mesh );
+
+                mesh.scale.multiplyScalar( 2 );
+                mesh.rotation.x = Math.PI / 2;
+
+                var size = Math.ceil( Math.sqrt( numOfObjects ) );
+                var x = Math.floor( i / size );
+                var y = (i - (x * size ) ) / size;
+                mesh.position.y = ( y - .5 ) * 100;
+                mesh.position.x = ( x/size - .5 ) * 100;
+
+                mesh.hoverOut = hoverOut;
+                mesh.hoverOver = hoverOver;
+                mesh.select = select;
+                mesh.deselect = deselect;
+
+                objectControls.add( mesh );
+
+                
+                cloth = new Cloth( mesh.position );
+                cloth.physicsRenderer.addDebugScene( scene );
+                cloth.physicsRenderer.debugScene.scale.multiplyScalar( .3 );
+                cloth.physicsRenderer.debugScene.position.y = 30;
+
+              }
+
+              animate();
 
 
 
@@ -301,7 +289,7 @@ console.log( THREE );
         audioController.update();
 
         //if( !physicsPaused ){
-        //cloth.update();
+        cloth.update();
         //}
 
         //console.log( riggedSkeleton.hand.position );

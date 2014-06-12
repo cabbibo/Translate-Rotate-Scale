@@ -8,7 +8,7 @@ uniform float dT;
 
 varying vec2 vUv;
 
-const float maxVel = 2.;
+const float maxVel = 1.;
 
 const float size = 1. / 32.;
 const float hSize = size / 2.;
@@ -25,21 +25,6 @@ vec3 springForce( vec3 toPos , vec3 fromPos , float staticLength ){
   vec3 springDif = balance - dif;
 
   return springDif;
-
-}
-
-vec3 cubicCurve( float t , vec3  c0 , vec3 c1 , vec3 c2 , vec3 c3 ){
-  
-  float s  = 1. - t; 
-
-  vec3 v1 = c0 * ( s * s * s );
-  vec3 v2 = 3. * c1 * ( s * s ) * t;
-  vec3 v3 = 3. * c2 * s * ( t * t );
-  vec3 v4 = c3 * ( t * t * t );
-
-  vec3 value = v1 + v2 + v3 + v4;
-
-  return value;
 
 }
 
@@ -63,8 +48,8 @@ void main(){
   vec3 forceVel = vec3( 0. );
   vec3 forceOut = vec3( 0. );
 
-  float sLY = springLength * 1.;
-  float sLX = springLength * 100. * (vUv.y * vUv.y ) +.3;
+  float sLY = springLength * .01;
+  float sLX = springLength * 10. * (vUv.y * vUv.y ) +.3;
 
 
   vec2 index = vec2( floor( vUv.x / size) , floor(vUv.y / size) );
@@ -186,60 +171,28 @@ void main(){
   vec3 columnToPos = pos.xyz - columnPos;
 
 
-  vec3 p0 = vec3(0.);
-  vec3 v0 = vec3(0.);
   vec3 p1 = vec3(0.);
   vec3 v1 = vec3(0.);
- 
   vec3 p2 = vec3(0.);
+  vec3 v2 = vec3(0.);
   if( baseUp == 0. ){
 
-    p0 = texture2D( t_column , vec2( 0. , baseUp    / 8. ) ).xyz;
-    p1 = texture2D( t_column , vec2( 0. , baseDown  / 8. ) ).xyz;
+    p1 = texture2D( t_column , vec2( 0. , baseUp   / 8. ) ).xyz;
+    p2 = texture2D( t_column , vec2( 0. , down   / 8. ) ).xyz;
 
-    // v0 = 0;
 
-    p2 = texture2D( t_column , vec2( 0. , (baseDown + 1. ) / 8. )).xyz;
-    v1 = .5 * ( p2 - p0 );
+    
 
-  }else if( baseDown == 8. ){
-
-    p0 = texture2D( t_column , vec2( 0. , baseUp    / 8. ) ).xyz;
-    p1 = texture2D( t_column , vec2( 0. , baseDown  / 8. ) ).xyz;
-
-    // v1 = 0;
-
-    p2 = texture2D( t_column , vec2( 0. , (baseUp - 1. ) / 8. )).xyz;
-    v0 = .5 * ( p1 - p2 );
-
-  }else{
-
-    p0 = texture2D( t_column , vec2( 0. , baseUp    / 8. ) ).xyz;
-    p1 = texture2D( t_column , vec2( 0. , baseDown  / 8. ) ).xyz;
-
-    // v0 = 0;
-
-    vec3 pMinus = texture2D( t_column , vec2( 0. , (baseUp -1.)    / 8. ) ).xyz;
-    p2 = texture2D( t_column , vec2( 0. , (baseDown + 1. ) / 8. )).xyz;
-    v1 = .5 * ( p2 - p0 );
-    v0 = .5 * ( p1 - pMinus );
 
   }
 
 
-  vec3 c0 = p0;
-  vec3 c1 = p0 + v0/3.;
-  vec3 c2 = p1 - v1/3.;
-  vec3 c3 = p1;
 
-  vec3 centerOfCircle = cubicCurve( amount , c0 , c1 , c2 , c3 );
-  vec3 forNormal      = cubicCurve( amount - .1 , c0 , c1 , c2 , c3 );
 
-  dirNorm = normalize(forNormal - centerOfCircle);
 
-  columnPos = centerOfCircle ;
-  
-  columnToPos = pos.xyz - columnPos;
+
+
+
 
 
   // Closest Point Method
@@ -255,7 +208,7 @@ void main(){
 
   // Exact rotation Method
 
-  vec3 upVector = vec3( 0. , 0. , 1. );
+  vec3 upVector = vec3( 0. , 1. , 0. );
   float upVectorProj = dot( upVector , dirNorm );
   vec3 upVectorPara = upVectorProj * dirNorm;
   vec3 upVectorPerp = upVector - upVectorPara;
@@ -268,29 +221,45 @@ void main(){
   float x = cos( theta );
   float y = sin( theta );
 
-  float r = 300.* sqrt(vUv.y) * (1./( (5. * vUv.y) +.4)) * (vUv.y*vUv.y*vUv.y  + .1);
-  pointToAttractTo = columnPos + ( r * x * basisX ) + ( r * y * basisY );
+  pointToAttractTo = columnPos + ( 10. * x * basisX ) + ( 10. * y * basisY );
 
   //vel += normalize((pointToAttractTo - pos.xyz)) * .1;
+ 
+  if(( baseUp ) == 0. ){
 
-  vec3 distToPoint = pointToAttractTo - pos.xyz;
+    //p = (pointToAttractTo - pos.xyz );
+    p = pointToAttractTo;
 
-  
+    //return;
+
+
+  }else if( baseDown == 8. ){
+
+
+    p = pointToAttractTo;
+
+
+  }else{
+
+    p = vec3( 1. );
+
+
+
+  }
+
+
+  /*
     if( length( totalForce ) > maxVel ){
 
       totalForce = normalize( totalForce ) * maxVel;
 
     }
 
-    vec3 pointPower = distToPoint ;
 
-  if( vUv.y + size > 1. ){
-    pointPower = vec3( 0. );
-  }
-    p = pos.xyz + vel * .3 + pointPower * .1 * ((1.-vUv.y)) + totalForce * .5; //* dT ; 
-
+    p = pos.xyz + totalForce * .45; //* dT ; 
 
    // gl_FragColor = vec4( p , 1. );
+*/
 
 
 
