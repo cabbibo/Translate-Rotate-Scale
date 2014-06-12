@@ -75,5 +75,12 @@
 
      gl_FragColor = normalize( gl_FragColor );*/
 
+     if( facingRatio < .9 ){
+
+
+       //gl_FragColor.rgb *= .1;//vec3( 0. , 0.  ,0. );
+
+     }
+
      //gl_FragColor.rgb *= vec3( 2. , .7, 2. );//abs(nNormal);
   } 
